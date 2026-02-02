@@ -1,112 +1,170 @@
 import tkinter as tk
-from tkinter import scrolledtext, messagebox
+from tkinter import scrolledtext, messagebox, Toplevel
 import threading
 import os
 import joblib
+from PIL import Image, ImageTk
 
-# Importamos tus scripts originales
-import preparar_datos
-import entrenar_modelo_multinomial
-import entrenar_modelo_arbol
-import entrenar_modelo_gaussiano
+# Importamos tus módulos
+import prepare_data
+import train_multinomial_model
+import train_tree_model
+import train_gaussian_model
 
-class AppSpam:
+# --- PALETA DARK INDUSTRIAL ---
+COLOR_BG = "#21252b"          # Fondo principal (Gris muy oscuro)
+COLOR_PANEL = "#2c313a"       # Fondo de las tarjetas de modelos
+COLOR_INPUT = "#3b4048"       # Fondo del cuadro de texto
+COLOR_TEXT_DIM = "#abb2bf"    # Texto secundario (Gris claro)
+COLOR_TEXT_BRIGHT = "#ffffff" # Texto principal (Blanco)
+COLOR_ACCENT = "#ff9800"      # NARANJA (Botón y títulos)
+COLOR_BTN_TEXT = "#000000"    # NEGRO (Texto botón)
+COLOR_TERM_BG = "#181a1f"     # Negro profundo para terminal
+
+class SpamApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Detector de Spam - Ventana de Control")
-        self.root.geometry("600x700")
+        self.root.title("AI Spam Detector - Dark Mode")
+        self.root.geometry("1000x720")
+        self.root.configure(bg=COLOR_BG)
 
-        # 1. Área de Input
-        tk.Label(root, text="Introduce el mensaje a analizar:", font=('Arial', 12, 'bold')).pack(pady=10)
-        self.input_text = tk.Text(root, height=8, width=60)
-        self.input_text.pack(pady=5)
+        # --- CABECERA ---
+        tk.Label(root, text="🛡️ AI SPAM DETECTOR", font=('Impact', 24), 
+                 bg=COLOR_BG, fg=COLOR_ACCENT).pack(pady=20)
 
-        # 2. Botón de Comprobar
-        self.btn_comprobar = tk.Button(root, text="🔍 COMPROBAR MENSAJE", command=self.predecir, 
-                                       bg="#4CAF50", fg="white", font=('Arial', 10, 'bold'), state="disabled")
-        self.btn_comprobar.pack(pady=10)
+        # --- PANEL DE ENTRADA ---
+        input_frame = tk.Frame(root, bg=COLOR_BG)
+        input_frame.pack(fill="x", padx=50)
+        
+        tk.Label(input_frame, text="MENSAJE A ANALIZAR:", font=('Segoe UI', 10, 'bold'), 
+                 bg=COLOR_BG, fg=COLOR_TEXT_DIM).pack(anchor="w")
+        
+        self.input_text = tk.Text(input_frame, height=4, font=('Consolas', 11), 
+                                  relief="flat", bg=COLOR_INPUT, fg=COLOR_TEXT_BRIGHT,
+                                  insertbackground="white", padx=10, pady=10)
+        self.input_text.pack(fill="x", pady=5)
 
-        # 3. Mini Terminal de Logs
-        tk.Label(root, text="Terminal de estado:", font=('Arial', 10, 'italic')).pack(pady=(20, 0))
-        self.log_area = scrolledtext.ScrolledText(root, height=15, width=70, bg="black", fg="#00FF00")
-        self.log_area.pack(pady=5)
+        # BOTÓN NARANJA Y NEGRO
+        self.check_button = tk.Button(
+            input_frame, text="EJECUTAR ANÁLISIS IA", command=self.predict_all,
+            bg=COLOR_ACCENT, fg=COLOR_BTN_TEXT, font=('Segoe UI', 12, 'bold'),
+            activebackground="#e68a00", activeforeground=COLOR_BTN_TEXT,
+            relief="flat", cursor="hand2", state="disabled", pady=12
+        )
+        self.check_button.pack(fill="x", pady=15)
 
-        # Iniciar proceso de verificación de archivos al abrir
-        self.log("Iniciando aplicación...")
-        threading.Thread(target=self.inicializar_sistema, daemon=True).start()
+        # --- PANEL DE MODELOS (Gris medio, no blanco) ---
+        self.results_frame = tk.Frame(root, bg=COLOR_BG)
+        self.results_frame.pack(fill="x", padx=20, pady=10)
+        
+        self.model_widgets = {}
+        models = [
+            ("Multinomial", "multinomial_model.pkl", "cm_multinomial.png", train_multinomial_model.train),
+            ("Decision Tree", "tree_model.pkl", "cm_tree.png", train_tree_model.train),
+            ("Gaussian", "gaussian_model.pkl", "cm_gaussian.png", train_gaussian_model.train)
+        ]
 
-    def log(self, mensaje):
-        """Escribe en la terminal de la ventana"""
-        self.log_area.insert(tk.END, f"> {mensaje}\n")
+        for i, (name, pkl, img, func) in enumerate(models):
+            # Tarjetas oscuras
+            frame = tk.Frame(self.results_frame, bg=COLOR_PANEL, padx=15, pady=15, 
+                             highlightbackground="#3e4451", highlightthickness=1)
+            frame.grid(row=0, column=i, padx=10, sticky="nsew")
+            self.results_frame.columnconfigure(i, weight=1)
+
+            tk.Label(frame, text=name.upper(), font=('Segoe UI', 9, 'bold'), 
+                     bg=COLOR_PANEL, fg=COLOR_TEXT_DIM).pack()
+
+            res_label = tk.Label(frame, text="---", font=('Segoe UI', 14, 'bold'), 
+                                 bg=COLOR_PANEL, fg=COLOR_TEXT_DIM)
+            res_label.pack(pady=10)
+            
+            # Botón de matriz integrado
+            btn_matrix = tk.Button(frame, text="Ver matriz", font=('Segoe UI', 7, 'bold'),
+                                   bg="#4b5263", fg=COLOR_BTN_TEXT, relief="flat",
+                                   activebackground=COLOR_ACCENT, cursor="hand2",
+                                   command=lambda p=img: self.show_matrix_window(p))
+            btn_matrix.pack(pady=5)
+
+            self.model_widgets[name] = {"res": res_label, "pkl": pkl, "func": func}
+
+        # --- TERMINAL DE LOGS ---
+        log_label = tk.Label(root, text="SISTEMA DE LOGS:", font=('Segoe UI', 8, 'bold'), 
+                             bg=COLOR_BG, fg=COLOR_TEXT_DIM)
+        log_label.pack(padx=50, anchor="w", pady=(20,0))
+        
+        self.log_area = scrolledtext.ScrolledText(root, height=10, bg=COLOR_TERM_BG, 
+                                                  fg=COLOR_ACCENT, font=('Consolas', 10),
+                                                  borderwidth=0, padx=10, pady=10)
+        self.log_area.pack(fill="x", padx=50, pady=10)
+
+        threading.Thread(target=self.initialize_system, daemon=True).start()
+
+    def log(self, message):
+        self.log_area.insert(tk.END, f"> {message}\n")
         self.log_area.see(tk.END)
 
-    def inicializar_sistema(self):
-        """Revisa pkls y los genera si no existen"""
+    def initialize_system(self):
         try:
-            # 1. Preparar datos
-            if not os.path.exists("datos_procesados.pkl"):
-                self.log("AVISO: No se detectó 'datos_procesados.pkl'.")
-                self.log("Preparando datos desde 'spam.csv'...")
-                # Usamos el mismo archivo para train y test por simplicidad si no tienes dos
-                exito, msg = preparar_datos.ejecutar_preparacion("spam.csv", "spam.csv", "datos_procesados.pkl")
-                if not exito: 
-                    self.log(f"ERROR: {msg}")
-                    return
-                self.log("Datos procesados correctamente.")
-            
-            # 2. Entrenar modelos si no existen
-            modelos = [
-                ("modelo_multinomial.pkl", entrenar_modelo_multinomial.entrenar),
-                ("modelo_arbol.pkl", entrenar_modelo_arbol.entrenar),
-                ("modelo_gaussiano.pkl", entrenar_modelo_gaussiano.entrenar)
-            ]
+            if not os.path.exists("processed_data.pkl"):
+                self.log("Preparando datos procesados...")
+                success, _ = prepare_data.run_preparation("spam.csv", "spam.csv", "processed_data.pkl")
+                if not success: return
 
-            for nombre_pkl, funcion_entrenar in modelos:
-                if not os.path.exists(nombre_pkl):
-                    self.log(f"Entrenando {nombre_pkl}...")
-                    funcion_entrenar("datos_procesados.pkl", nombre_pkl, f"cm_{nombre_pkl.replace('.pkl', '.png')}")
-                    self.log(f"Modelo {nombre_pkl} listo.")
+            for name, data in self.model_widgets.items():
+                pkl_path = data["pkl"]
+                if not os.path.exists(pkl_path):
+                    self.log(f"Entrenando {name}...")
+                    data["func"]("processed_data.pkl", pkl_path, f"cm_{name.lower().replace(' ', '')}.png")
+                self.log(f"Modelo {name} cargado.")
 
-            self.log("SISTEMA LISTO. Ya puedes analizar mensajes.")
-            self.btn_comprobar.config(state="normal")
-
+            self.log("SISTEMA ONLINE. Esperando entrada...")
+            self.check_button.config(state="normal")
         except Exception as e:
-            self.log(f"ERROR CRÍTICO: {str(e)}")
+            self.log(f"ERROR: {e}")
 
-    def predecir(self):
-        texto = self.input_text.get("1.0", tk.END).strip()
-        if not texto:
-            messagebox.showwarning("Atención", "Escribe un mensaje primero.")
+    def show_matrix_window(self, img_path):
+        if not os.path.exists(img_path):
+            messagebox.showinfo("Info", "Entrenando...")
             return
+        top = Toplevel()
+        top.title("Confusion Matrix")
+        top.configure(bg=COLOR_BG)
+        img = Image.open(img_path).resize((450, 450), Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(img)
+        lbl = tk.Label(top, image=photo, bg=COLOR_BG)
+        lbl.image = photo
+        lbl.pack(padx=20, pady=20)
+
+    def predict_all(self):
+        text = self.input_text.get("1.0", tk.END).strip()
+        if not text: return
 
         try:
-            # Cargar lo necesario
-            data = joblib.load("datos_procesados.pkl")
+            data = joblib.load("processed_data.pkl")
             vec = data['vectorizador']
-            modelo = joblib.load("modelo_multinomial.pkl") # Usamos Multinomial por defecto
+            
+            # Limpieza profesional
+            tokens = prepare_data.tokenize(text)
+            tokens = prepare_data.to_lowercase(tokens)
+            tokens = prepare_data.remove_symbols(tokens)
+            tokens = prepare_data.remove_stopwords(tokens)
+            tokens = prepare_data.lemmatize(tokens)
+            clean_text = " ".join(tokens)
+            
+            vec_input = vec.transform([clean_text]).toarray()
 
-            # Limpiar y transformar usando tus funciones de preparar_datos.py
-            # Replicamos la lógica de limpieza de tu script
-            t = preparar_datos.tokenizar(texto)
-            t = preparar_datos.hacer_minusculas(t)
-            t = preparar_datos.eliminar_simbolos(t)
-            t = preparar_datos.eliminar_numeros(t)
-            t = preparar_datos.quitar_invariantes(t)
-            t = preparar_datos.lematizar(t)
-            limpio = "".join(i+' ' for i in t)
-
-            vector = vec.transform([limpio]).toarray()
-            resultado = modelo.predict(vector)[0]
-
-            if resultado == 'spam':
-                messagebox.showwarning("Resultado", "🚨 ALERTA: Es SPAM")
-            else:
-                messagebox.showinfo("Resultado", "✅ MENSAJE SEGURO (HAM)")
-
+            for name, widgets in self.model_widgets.items():
+                model = joblib.load(widgets["pkl"])
+                pred = model.predict(vec_input)[0]
+                # Colores neón para resultados: Rojo vivo vs Verde neón
+                color = "#ff5555" if pred == 'spam' else "#50fa7b"
+                widgets["res"].config(text=pred.upper(), fg=color)
+            
+            self.log("Análisis finalizado.")
         except Exception as e:
-            self.log(f"Error en predicción: {e}")
+            self.log(f"Error: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = AppSpam(root)
+    app = SpamApp(root)
     root.mainloop()
