@@ -43,7 +43,7 @@ pip install scikit-learn pandas joblib matplotlib seaborn Pillow nltk
 Ejecuta el script principal para abrir la interfaz gráfica de usuario (GUI):
 
 ```bash
-python main_app.py
+python app.py
 ```
 
 ---
