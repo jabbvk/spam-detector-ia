@@ -26,8 +26,7 @@ cd spam-detector-ia
 # Inicializar y descargar los archivos LFS (.csv y .pkl)
 git lfs install
 git lfs pull
-
----
+```
 
 ### **⚙️ Configuración y Ejecución**
 
