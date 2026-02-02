@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Entorno virtual de Python
+.venv/
+venv/
+env/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Datos procesados y modelos (Archivos pesados)
+*.pkl
+
+# Imágenes de las matrices de confusión
+*.png
