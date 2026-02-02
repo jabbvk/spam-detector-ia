@@ -28,6 +28,8 @@ git lfs install
 git lfs pull
 ```
 
+---
+
 ### **⚙️ Configuración y Ejecución**
 
 #### **1. Instalar dependencias**
@@ -43,6 +45,8 @@ Ejecuta el script principal para abrir la interfaz gráfica de usuario (GUI):
 ```bash
 python main_app.py
 ```
+
+---
 
 ### **🚀 Cómo usarlo**
 1. **Inicialización**: Al arrancar, el sistema detectará automáticamente si los archivos `.pkl` de los modelos están presentes. Si falta alguno, la terminal integrada informará del progreso mientras realiza el entrenamiento en segundo plano.
