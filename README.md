@@ -1,44 +1,52 @@
-🛡️ AI Multi-Model Spam Detector
-¿De qué va este proyecto?
-Este proyecto es un sistema inteligente de clasificación de correo electrónico que utiliza tres modelos distintos de Machine Learning (MultinomialNB, Decision Tree y GaussianNB) para identificar mensajes no deseados. Mediante el uso de Procesamiento de Lenguaje Natural (NLP), la aplicación limpia, lematiza y analiza el texto para determinar en tiempo real si un mensaje es Spam o Seguro (Ham).
+# 🛡️ AI Multi-Model Spam Detector
 
-📥 Instalación y Descarga
-El proyecto utiliza Git LFS (Large File Storage) para gestionar los archivos de datos y los modelos entrenados (.csv y .pkl), asegurando que el repositorio se mantenga ligero y funcional.
+### **¿De qué va este proyecto?**
+Este proyecto consiste en un sistema inteligente de detección de correo basura (Spam) que emplea tres modelos de Machine Learning: Multinomial Naive Bayes, Árbol de Decisión y Naive Bayes Gaussiano. A través de técnicas de Procesamiento de Lenguaje Natural (NLP), la herramienta limpia, normaliza y analiza el texto para clasificar mensajes en tiempo real.
 
-1. Descargar Git LFS
-Si no lo tienes en tu sistema, descárgalo e instálalo desde la página oficial: 👉 git-lfs.com
+---
 
-2. Clonar el repositorio
-Ejecuta los siguientes comandos en tu terminal para bajar el código y los archivos pesados:
+### **📥 Instalación y Descarga**
 
-Bash
+El repositorio utiliza **Git LFS (Large File Storage)** para gestionar el dataset y los archivos de los modelos entrenados.
+
+#### **1. Descargar Git LFS**
+Es necesario tener instalado Git LFS para bajar los archivos pesados correctamente. Descárgalo aquí:
+👉 [**git-lfs.com**](https://git-lfs.com/)
+
+#### **2. Clonar el repositorio**
+Utiliza los siguientes comandos en tu terminal para obtener el código:
+
+```bash
 # Clonar el repositorio
-git clone https://github.com/jabbvk/spam-detector-ia.git
+git clone [https://github.com/jabbvk/spam-detector-ia.git](https://github.com/jabbvk/spam-detector-ia.git)
 
-# Entrar en la carpeta
+# Entrar en el directorio
 cd spam-detector-ia
 
-# Inicializar y descargar los archivos LFS
+# Inicializar y descargar los archivos LFS (.csv y .pkl)
 git lfs install
 git lfs pull
-⚙️ Configuración y Ejecución
-Sigue estos pasos para preparar tu entorno y lanzar la interfaz gráfica:
 
-1. Instalar dependencias
-Asegúrate de tener Python instalado y ejecuta el siguiente comando para instalar las librerías necesarias:
+---
 
-Bash
+### **⚙️ Configuración y Ejecución**
+
+#### **1. Instalar dependencias**
+Instala las librerías necesarias de Python (Scikit-Learn, Pandas, Joblib, Matplotlib, Seaborn, Pillow y NLTK):
+
+```bash
 pip install scikit-learn pandas joblib matplotlib seaborn Pillow nltk
-2. Lanzar la aplicación
-Una vez instaladas las dependencias, simplemente ejecuta el archivo principal de la interfaz:
+```
 
-Bash
+#### **2. Lanzar la aplicación**
+Ejecuta el script principal para abrir la interfaz gráfica de usuario (GUI):
+
+```bash
 python main_app.py
-🚀 Cómo usarlo
-Al abrir la aplicación, el sistema verificará automáticamente si existen los modelos entrenados. Si falta alguno, la terminal integrada te informará mientras realiza el entrenamiento automáticamente.
+```
 
-Escribe o pega el texto de un email en el cuadro superior.
-
-Pulsa "EJECUTAR ANÁLISIS IA".
-
-Verás la opinión de los tres modelos simultáneamente y podrás consultar sus Matrices de Confusión pulsando en los botones correspondientes.
+### **🚀 Cómo usarlo**
+1. **Inicialización**: Al arrancar, el sistema detectará automáticamente si los archivos `.pkl` de los modelos están presentes. Si falta alguno, la terminal integrada informará del progreso mientras realiza el entrenamiento en segundo plano.
+2. **Análisis**: Escribe o pega el texto del mensaje que deseas comprobar en el cuadro de entrada principal.
+3. **Resultados**: Pulsa el botón naranja **"EJECUTAR ANÁLISIS IA"**. Los tres modelos (Multinomial, Árbol y Gaussiano) darán su veredicto de forma simultánea.
+4. **Métricas**: Para entender mejor por qué el modelo ha tomado esa decisión, pulsa en los botones **"VIEW MATRIX"** de cada tarjeta para abrir la imagen de la matriz de confusión correspondiente.
