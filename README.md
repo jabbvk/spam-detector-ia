@@ -18,7 +18,7 @@ Utiliza los siguientes comandos en tu terminal para obtener el código:
 
 ```bash
 # Clonar el repositorio
-git clone [https://github.com/jabbvk/spam-detector-ia.git](https://github.com/jabbvk/spam-detector-ia.git)
+git clone https://github.com/jabbvk/spam-detector-ia.git
 
 # Entrar en el directorio
 cd spam-detector-ia
